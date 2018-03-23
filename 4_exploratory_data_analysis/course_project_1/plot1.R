@@ -1,16 +1,16 @@
 library("data.table")
 
-# Reads in data from file then subsets data for specified dates
-powerDT <- data.table::fread(input = "household_power_consumption.txt", na.strings="?")
+# Reads in data
+powerDT <- data.table::fread(input="household_power_consumption.txt",na.strings="?")
 
-# Prevents histogram from printing in scientific notation
-powerDT[, Global_active_power := lapply(.SD, as.numeric), .SDcols = c("Global_active_power")]
+# Converts to numeric
+powerDT[,Global_active_power:=lapply(.SD,as.numeric),.SDcols=c("Global_active_power")]
 
-# Change Date Column to Date Type
-powerDT[, Date := lapply(.SD, as.Date, "%d/%m/%Y"), .SDcols = c("Date")]
+# Make date column
+powerDT[,Date:=lapply(.SD,as.Date,"%d/%m/%Y"),.SDcols=c("Date")]
 
-# Filter Dates
-powerDT <- powerDT[(Date >= "2007-02-01") & (Date <= "2007-02-02")]
+# Filter dates
+powerDT <- powerDT[(Date>="2007-02-01")&(Date<"2007-02-03")]
 
 ## Plot 1
 png("plot1.png", width=480, height=480)
