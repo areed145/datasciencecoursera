@@ -41,4 +41,4 @@ comb <- reshape2::melt(data=comb,id=c("SubjectNum","Activity"))
 comb <- reshape2::dcast(data=comb,SubjectNum+Activity~variable,fun.aggregate=mean)
 
 # Write tidy dataset to file
-write.table(comb,file="tidy.txt",row.names=FALSE,col.names=TRUE)
+data.table::fwrite(x=comb,file="tidy.txt",row.names=FALSE)
