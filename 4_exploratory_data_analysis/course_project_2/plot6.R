@@ -1,28 +1,24 @@
-library("data.table")
-path <- getwd()
-download.file(url = "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
-              , destfile = paste(path, "dataFiles.zip", sep = "/"))
-unzip(zipfile = "dataFiles.zip")
+library("ggplot2")
 
-SCC <- data.table::as.data.table(x = readRDS(file = "Source_Classification_Code.rds"))
-NEI <- data.table::as.data.table(x = readRDS(file = "summarySCC_PM25.rds"))
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
 
 # Gather the subset of the NEI data which corresponds to vehicles
-condition <- grepl("vehicle", SCC[, SCC.Level.Two], ignore.case=TRUE)
-vehiclesSCC <- SCC[condition, SCC]
-vehiclesNEI <- NEI[NEI[, SCC] %in% vehiclesSCC,]
+vehicles <- grepl("vehicle", SCC$SCC.Level.Two, ignore.case=TRUE)
+vehiclesSCC <- SCC[vehicles,]$SCC
+vehiclesNEI <- NEI[NEI$SCC %in% vehiclesSCC,]
 
 # Subset the vehicles NEI data by each city's fip and add city name.
-vehiclesBaltimoreNEI <- vehiclesNEI[fips == "24510",]
-vehiclesBaltimoreNEI[, city := c("Baltimore City")]
+vehiclesBaltimoreNEI <- vehiclesNEI[vehiclesNEI$fips=="24510",]
+vehiclesBaltimoreNEI$city <- "Baltimore City"
 
-vehiclesLANEI <- vehiclesNEI[fips == "06037",]
-vehiclesLANEI[, city := c("Los Angeles")]
+vehiclesLANEI <- vehiclesNEI[vehiclesNEI$fips=="06037",]
+vehiclesLANEI$city <- "Los Angeles County"
 
 # Combine data.tables into one data.table
 bothNEI <- rbind(vehiclesBaltimoreNEI,vehiclesLANEI)
 
-png("plot6.png")
+png("plot6.png", width=480, height=480)
 
 ggplot(bothNEI, aes(x=factor(year), y=Emissions, fill=city)) +
   geom_bar(aes(fill=year),stat="identity") +
