@@ -1,0 +1,101 @@
+---
+title: "NOAA Storm Data Impact Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<!-- Immediately after the title, there should be a synopsis which describes
+     and summarizes your analysis in at most 10 complete sentences. -->
+
+## Synopsis
+This analysis explores the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This analysis first looks at the question of which types of weather events are most harmful to population health. Harmful is measured as counts of injuries or fatalities. The analysis also looks at the question of which types of events have the greatest 
+economic consequences. Economics are measured in dollar impact.
+
+Tornados have the greatest impact in all areas. They are the costliest in terms
+of humans and dollars. A further question with additional research and data to 
+ask is are there cost effective ways to reduce their impact without over 
+spending to mitigate the impact.
+
+## The Data
+This storm database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
+
+* National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+* National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+The data was downloaded on March 19, 2018 at 8:15pm EST from [here](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2)
+
+## Data Processing
+```{r cache = TRUE}
+subDir <- "data"
+dataFileName <- "repdata%2Fdata%2FStormData.csv.bz2"
+stormData <- read.csv(file.path(subDir,dataFileName))
+numRecords <- nrow(stormData)
+```
+Loaded `r numRecords` records. Now glance at the data
+```{r}
+str(stormData)
+```
+### Population Health
+Question: Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+For "population health", we'll look at injuries (INJURIES) and  fatalities 
+(FATALITIES) separately. A consolidated view could add the two numbers or assign
+a multiplier.
+
+```{r}
+library(dplyr)
+par(mfrow=c(1,2))
+
+fatalitiesByEventType <- stormData %>% group_by(EVTYPE) %>% summarise(n=sum(FATALITIES,na.rm = TRUE)) %>% arrange(desc(n))
+top5Fatal <- head(fatalitiesByEventType,n=5)
+barplot(top5Fatal$n, main="Top Fatatlies by Event Type",legend.text = top5Fatal$EVTYPE, col = heat.colors(5), xlab = "Event Type", ylab="Fatality Count")
+
+injuriesByEventType <- stormData %>% group_by(EVTYPE) %>% summarise(n=sum(INJURIES,na.rm = TRUE)) %>% arrange(desc(n))
+top5Injury <- head(injuriesByEventType,n=5)
+barplot(top5Injury$n, main="Top Injuries by Event Type",legend.text = top5Injury$EVTYPE, col = heat.colors(5), xlab = "Event Type", ylab="Injury Count")
+```
+
+For fatalities, we see that tornados are the most deadly by a wide number. The next highest is excessive heat. Further analysis could be done to see where these fatalities occur most and how well prepared different areas are for those type events. Does the south have more excessive heat events but less fatalities because they're used to those events?
+
+Now for injuries, we see that tornados also cause the most injuries. 
+Thunderdstorm winds are second. It's interesting though not surprising that 
+excessive heat which is the second killer,drops down to the fourth most injurous event.
+
+### Economic Impact
+Question: Across the United States, which types of events have the greatest economic consequences?
+
+Economic consequences can be broken down into property damage and crop damage.
+Let's look at each.
+
+First, let's look at property damage:
+<!-- TODO: Fix absolute units on damage amount -->
+```{r}
+propertyDamageByEventType <- stormData %>% group_by(EVTYPE) %>% summarise(n=sum(PROPDMG,na.rm = TRUE)) %>% arrange(desc(n))
+top5PropDamage <- head(propertyDamageByEventType,n=5)
+barplot(top5PropDamage$n, main="Top Property Damage by Event Type",legend.text = top5PropDamage$EVTYPE, col = heat.colors(5), xlab = "Event Type", ylab="Property Damage")
+```
+
+Again, tornados seem to be the most impactful in property damage total. Further
+analysis could look at this to see where the events occur. Also, are they
+more costly by how often they happen or how much for a single event. The average
+cost might assist with this understanding.
+
+Now let's look at crop damage:
+<!-- TODO: Fix absolute units on damage amount -->
+```{r}
+cropDamageByEventType <- stormData %>% group_by(EVTYPE) %>% summarise(n=sum(CROPDMG,na.rm = TRUE)) %>% arrange(desc(n))
+top5CropDamage <- head(cropDamageByEventType,n=5)
+barplot(top5CropDamage$n, main="Top Crop Damage by Event Type",legend.text = top5CropDamage$EVTYPE, col = heat.colors(5), xlab = "Event Type", ylab="Crop Damage")
+```
+
+## Results
+Tornados have the greatest impact in all areas. They are the costliest in terms
+of humans and dollars. A further question to ask is are there cost effective
+ways to reduce their impact without over spending to mitigate the impact.
